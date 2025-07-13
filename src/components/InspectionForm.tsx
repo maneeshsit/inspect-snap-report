@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import jsPDF from 'jspdf';
 
 interface Photo {
   id: string;
@@ -118,41 +119,94 @@ const InspectionForm = () => {
     const section = sections.find(s => s.id === sectionId);
     if (!section) return;
 
-    // Create a comprehensive report
-    const reportContent = `
-${sectionTitle.toUpperCase()} INSPECTION REPORT
-=====================================
-Inspector: ${inspectorName}
-Date: ${inspectionDate}
-Status: ${section.status.toUpperCase()}
-
-DESCRIPTION:
-${section.description}
-
-NOTES:
-${section.notes || 'No notes provided'}
-
-PHOTOS: ${section.photos.length} photo(s) attached
-=====================================
-Generated on: ${new Date().toLocaleString()}
-    `;
-
-    // Create blob and trigger download with save dialog
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${sectionTitle.replace(/\s+/g, '_')}_Report_${inspectionDate}.txt`;
+    // Create PDF document
+    const doc = new jsPDF();
     
-    // This will trigger the browser's save dialog
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // Add ISN heading at top center
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.text('ISN', pageWidth / 2, 20, { align: 'center' });
+    
+    // Add inspection report title
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${sectionTitle.toUpperCase()} INSPECTION REPORT`, pageWidth / 2, 35, { align: 'center' });
+    
+    // Add separator line
+    doc.setLineWidth(0.5);
+    doc.line(20, 45, pageWidth - 20, 45);
+    
+    // Add report content
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    
+    let yPosition = 60;
+    const lineHeight = 7;
+    
+    // Add inspector details
+    doc.setFont('helvetica', 'bold');
+    doc.text('Inspector:', 20, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(inspectorName || 'Not specified', 60, yPosition);
+    yPosition += lineHeight;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Date:', 20, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(inspectionDate, 60, yPosition);
+    yPosition += lineHeight;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Status:', 20, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(section.status.toUpperCase(), 60, yPosition);
+    yPosition += lineHeight * 2;
+    
+    // Add description
+    doc.setFont('helvetica', 'bold');
+    doc.text('DESCRIPTION:', 20, yPosition);
+    yPosition += lineHeight;
+    doc.setFont('helvetica', 'normal');
+    const descriptionLines = doc.splitTextToSize(section.description, pageWidth - 40);
+    doc.text(descriptionLines, 20, yPosition);
+    yPosition += descriptionLines.length * lineHeight + lineHeight;
+    
+    // Add notes
+    doc.setFont('helvetica', 'bold');
+    doc.text('NOTES:', 20, yPosition);
+    yPosition += lineHeight;
+    doc.setFont('helvetica', 'normal');
+    if (section.notes) {
+      const notesLines = doc.splitTextToSize(section.notes, pageWidth - 40);
+      doc.text(notesLines, 20, yPosition);
+      yPosition += notesLines.length * lineHeight + lineHeight;
+    } else {
+      doc.text('No notes provided', 20, yPosition);
+      yPosition += lineHeight * 2;
+    }
+    
+    // Add photos info
+    doc.setFont('helvetica', 'bold');
+    doc.text('PHOTOS:', 20, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${section.photos.length} photo(s) attached`, 60, yPosition);
+    yPosition += lineHeight * 2;
+    
+    // Add footer
+    doc.setLineWidth(0.5);
+    doc.line(20, yPosition, pageWidth - 20, yPosition);
+    yPosition += lineHeight;
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, yPosition);
+
+    // Save the PDF
+    const fileName = `${sectionTitle.replace(/\s+/g, '_')}_Report_${inspectionDate}.pdf`;
+    doc.save(fileName);
 
     toast({
-      title: "Report Ready for Download",
-      description: `${sectionTitle} report is being saved to your device`,
+      title: "PDF Report Downloaded",
+      description: `${sectionTitle} report has been saved as PDF to your device`,
     });
   };
 
