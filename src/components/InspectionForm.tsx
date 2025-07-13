@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Camera, Upload, Trash2, Calendar, User, FileText, CheckCircle, AlertTriangle, Home, Bug, Wind, Droplets } from 'lucide-react';
+import { Camera, Upload, Trash2, Calendar, User, FileText, CheckCircle, AlertTriangle, Home, Bug, Wind, Droplets, Download, FileDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 
@@ -85,6 +84,62 @@ const InspectionForm = () => {
       case 'in-progress': return <AlertTriangle className="h-4 w-4" />;
       default: return null;
     }
+  };
+
+  const generateReport = (sectionId: string, sectionTitle: string) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+
+    toast({
+      title: "Report Generated",
+      description: `${sectionTitle} report has been generated successfully`,
+    });
+
+    console.log(`Generated report for ${sectionTitle}:`, {
+      section: section.title,
+      notes: section.notes,
+      photos: section.photos.length,
+      status: section.status
+    });
+  };
+
+  const downloadReport = (sectionId: string, sectionTitle: string) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+
+    // Create a simple text report
+    const reportContent = `
+${sectionTitle.toUpperCase()} INSPECTION REPORT
+=====================================
+Inspector: ${inspectorName}
+Date: ${inspectionDate}
+Status: ${section.status.toUpperCase()}
+
+DESCRIPTION:
+${section.description}
+
+NOTES:
+${section.notes || 'No notes provided'}
+
+PHOTOS: ${section.photos.length} photo(s) attached
+=====================================
+    `;
+
+    // Create and download the file
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${sectionTitle.replace(/\s+/g, '_')}_Report_${inspectionDate}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Report Downloaded",
+      description: `${sectionTitle} report has been downloaded`,
+    });
   };
 
   const handlePhotoCapture = (sectionId: string, files: FileList | null) => {
@@ -296,7 +351,7 @@ const InspectionForm = () => {
 
                 {/* Photo Section */}
                 <div>
-                  <Label className="text-sm font-medium">Photos</Label>
+                  <Label className="text-sm font-medium">Photos & Reports</Label>
                   <div className="mt-2 space-y-3">
                     <div className="flex flex-wrap gap-2">
                       <Button
@@ -316,6 +371,24 @@ const InspectionForm = () => {
                       >
                         <Upload className="h-4 w-4" />
                         Upload
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => generateReport(section.id, section.title)}
+                        className="flex items-center gap-2"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Generate Report
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => downloadReport(section.id, section.title)}
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download Report
                       </Button>
                     </div>
 
