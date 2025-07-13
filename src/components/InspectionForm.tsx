@@ -8,6 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Camera, Upload, Trash2, Calendar, User, FileText, CheckCircle, AlertTriangle, Home, Bug, Wind, Droplets, Download, FileDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Photo {
   id: string;
@@ -107,7 +118,7 @@ const InspectionForm = () => {
     const section = sections.find(s => s.id === sectionId);
     if (!section) return;
 
-    // Create a simple text report
+    // Create a comprehensive report
     const reportContent = `
 ${sectionTitle.toUpperCase()} INSPECTION REPORT
 =====================================
@@ -123,22 +134,25 @@ ${section.notes || 'No notes provided'}
 
 PHOTOS: ${section.photos.length} photo(s) attached
 =====================================
+Generated on: ${new Date().toLocaleString()}
     `;
 
-    // Create and download the file
+    // Create blob and trigger download with save dialog
     const blob = new Blob([reportContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = `${sectionTitle.replace(/\s+/g, '_')}_Report_${inspectionDate}.txt`;
+    
+    // This will trigger the browser's save dialog
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
     toast({
-      title: "Report Downloaded",
-      description: `${sectionTitle} report has been downloaded`,
+      title: "Report Ready for Download",
+      description: `${sectionTitle} report is being saved to your device`,
     });
   };
 
@@ -381,15 +395,33 @@ PHOTOS: ${section.photos.length} photo(s) attached
                         <FileText className="h-4 w-4" />
                         Generate Report
                       </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => downloadReport(section.id, section.title)}
-                        className="flex items-center gap-2"
-                      >
-                        <Download className="h-4 w-4" />
-                        Download Report
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="flex items-center gap-2"
+                          >
+                            <Download className="h-4 w-4" />
+                            Download Report
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Download {section.title} Report</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will download the inspection report for {section.title} as a text file to your device. 
+                              The report includes inspector details, notes, and photo count.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => downloadReport(section.id, section.title)}>
+                              Download
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
 
                     {/* Hidden file inputs */}
