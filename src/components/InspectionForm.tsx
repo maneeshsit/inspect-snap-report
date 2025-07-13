@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -126,7 +127,7 @@ const InspectionForm = () => {
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
     const pageWidth = doc.internal.pageSize.getWidth();
-    doc.text('ISN', pageWidth / 2, 20, { align: 'center' });
+    doc.text('Inspection Support Network (ISN)', pageWidth / 2, 20, { align: 'center' });
     
     // Add inspection report title
     doc.setFontSize(16);
