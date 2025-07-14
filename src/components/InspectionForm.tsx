@@ -109,16 +109,41 @@ const InspectionForm = () => {
     const section = sections.find(s => s.id === sectionId);
     if (!section) return;
 
+    // Create a comprehensive text report
+    const reportContent = `
+INSPECTION SUPPORT NETWORK (ISN)
+${sectionTitle.toUpperCase()} INSPECTION REPORT
+
+Inspector: ${inspectorName || 'Not specified'}
+Date: ${inspectionDate}
+Status: ${section.status.toUpperCase()}
+
+DESCRIPTION:
+${section.description}
+
+NOTES:
+${section.notes || 'No notes provided'}
+
+PHOTOS: ${section.photos.length} photo(s) attached
+${section.photos.map((photo, index) => `- Photo ${index + 1}: ${photo.name}`).join('\n')}
+
+Generated on: ${new Date().toLocaleString()}
+    `.trim();
+
+    // Create a blob and download it as a text file
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${sectionTitle.replace(/\s+/g, '_')}_Report_${inspectionDate}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
     toast({
       title: "Report Generated",
-      description: `${sectionTitle} report has been generated successfully`,
-    });
-
-    console.log(`Generated report for ${sectionTitle}:`, {
-      section: section.title,
-      notes: section.notes,
-      photos: section.photos.length,
-      status: section.status
+      description: `${sectionTitle} report has been downloaded successfully`,
     });
   };
 
@@ -218,9 +243,37 @@ const InspectionForm = () => {
   };
 
   const handlePhotoCapture = (sectionId: string, files: FileList | null) => {
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
-    Array.from(files).forEach(file => {
+    // Validate file types and sizes
+    const validFiles = Array.from(files).filter(file => {
+      const isValidType = file.type.startsWith('image/');
+      const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB limit
+      
+      if (!isValidType) {
+        toast({
+          title: "Invalid File Type",
+          description: `${file.name} is not a valid image file`,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      if (!isValidSize) {
+        toast({
+          title: "File Too Large",
+          description: `${file.name} exceeds 10MB limit`,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    validFiles.forEach(file => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const photo: Photo = {
@@ -243,8 +296,8 @@ const InspectionForm = () => {
     });
 
     toast({
-      title: "Photos Added",
-      description: `${files.length} photo(s) uploaded successfully`,
+      title: "Photos Uploaded",
+      description: `${validFiles.length} photo(s) uploaded successfully`,
     });
   };
 
