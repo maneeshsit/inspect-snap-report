@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Camera, Upload, Trash2, Calendar, User, FileText, CheckCircle, AlertTriangle, Home, Bug, Wind, Droplets, Download, FileDown } from 'lucide-react';
+import { Camera, Upload, Trash2, Calendar, User, FileText, CheckCircle, AlertTriangle, Home, Bug, Wind, Droplets, Download, FileDown, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +43,9 @@ const InspectionForm = () => {
   const [inspectorName, setInspectorName] = useState('');
   const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [currentSectionId, setCurrentSectionId] = useState<string>('');
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const [sections, setSections] = useState<InspectionSection[]>([
     {
       id: 'wind-mitigation',
@@ -82,6 +86,8 @@ const InspectionForm = () => {
   ]);
 
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -320,6 +326,92 @@ const InspectionForm = () => {
     }
   };
 
+  // Camera functionality
+  const startCamera = async (sectionId: string) => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment', // Prefer back camera
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+      
+      setStream(mediaStream);
+      setCurrentSectionId(sectionId);
+      setIsCameraOpen(true);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      toast({
+        title: "Camera Error",
+        description: "Unable to access camera. Please check permissions or try uploading a file instead.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setIsCameraOpen(false);
+    setCurrentSectionId('');
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current || !currentSectionId) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+
+    if (!context) return;
+
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Draw the video frame to canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Convert canvas to blob and create photo object
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const photo: Photo = {
+          id: Date.now().toString() + Math.random().toString(36),
+          url: e.target?.result as string,
+          name: `camera_photo_${Date.now()}.jpg`
+        };
+
+        setSections(prev => prev.map(section => 
+          section.id === currentSectionId 
+            ? { 
+                ...section, 
+                photos: [...section.photos, photo],
+                status: section.status === 'pending' ? 'in-progress' : section.status
+              }
+            : section
+        ));
+
+        toast({
+          title: "Photo Captured",
+          description: "Photo captured successfully",
+        });
+
+        stopCamera();
+      };
+      reader.readAsDataURL(blob);
+    }, 'image/jpeg', 0.9);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -410,7 +502,7 @@ const InspectionForm = () => {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => fileInputRefs.current[section.id]?.click()}
+                        onClick={() => startCamera(section.id)}
                         className="flex items-center gap-2"
                       >
                         <Camera className="h-4 w-4" />
@@ -524,6 +616,57 @@ const InspectionForm = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Camera Modal */}
+      <Dialog open={isCameraOpen} onOpenChange={(open) => !open && stopCamera()}>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Take Photo</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={stopCamera}
+                className="h-6 w-6 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="relative bg-black rounded-lg overflow-hidden">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-64 object-cover"
+              />
+              
+              {/* Capture button overlay */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                <Button
+                  onClick={capturePhoto}
+                  size="lg"
+                  className="bg-white hover:bg-gray-100 text-black rounded-full h-16 w-16 p-0"
+                >
+                  <Camera className="h-8 w-8" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Hidden canvas for capturing */}
+            <canvas ref={canvasRef} className="hidden" />
+            
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={stopCamera} className="flex-1">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
