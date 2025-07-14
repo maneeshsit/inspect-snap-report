@@ -366,22 +366,6 @@ const InspectionForm = () => {
               </div>
             </div>
             
-            <div>
-              <Label className="text-sm font-medium">Choose Template</Label>
-              <Select value={selectedTemplate} onValueChange={(value) => {
-                setSelectedTemplate(value);
-                loadTemplate(value);
-              }}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select inspection template" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="wind-mitigation">Wind Mitigation</SelectItem>
-                  <SelectItem value="wdo">WDO (Wood Destroying Organisms)</SelectItem>
-                  <SelectItem value="air-quality">Air Quality & Mold</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </CardContent>
         </Card>
 
