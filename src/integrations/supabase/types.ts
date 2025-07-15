@@ -14,7 +14,136 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      inspection_photos: {
+        Row: {
+          created_at: string
+          id: string
+          photo_name: string | null
+          photo_url: string
+          section_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_name?: string | null
+          photo_url: string
+          section_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_name?: string | null
+          photo_url?: string
+          section_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_photos_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspection_sections: {
+        Row: {
+          created_at: string
+          id: string
+          inspection_id: string | null
+          notes: string | null
+          section_title: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inspection_id?: string | null
+          notes?: string | null
+          section_title: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inspection_id?: string | null
+          notes?: string | null
+          section_title?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_sections_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspections: {
+        Row: {
+          created_at: string
+          id: string
+          inspection_date: string
+          inspector_name: string
+          property_address: string | null
+          template: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inspection_date: string
+          inspector_name: string
+          property_address?: string | null
+          template?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inspection_date?: string
+          inspector_name?: string
+          property_address?: string | null
+          template?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          role: string | null
+          subscription_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          role?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          role?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

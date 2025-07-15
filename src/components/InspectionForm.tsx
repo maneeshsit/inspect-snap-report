@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Camera, Upload, Trash2, Calendar, User, FileText, CheckCircle, AlertTriangle, Home, Bug, Wind, Droplets, Download, FileDown, X } from 'lucide-react';
+import { Camera, Upload, Trash2, Calendar, User, FileText, CheckCircle, AlertTriangle, Home, Bug, Wind, Droplets, Download, FileDown, X, LogOut, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -22,6 +22,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import jsPDF from 'jspdf';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Navigate, Link } from 'react-router-dom';
+import UpgradeButton from './UpgradeButton';
+import AriaGlassesIntegration from './AriaGlassesIntegration';
+import logo from '@/assets/logo.png';
 
 interface Photo {
   id: string;
@@ -40,12 +46,18 @@ interface InspectionSection {
 }
 
 const InspectionForm = () => {
+  const { user, signOut, isAdmin, isPro } = useAuth();
   const [inspectorName, setInspectorName] = useState('');
   const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [currentSectionId, setCurrentSectionId] = useState<string>('');
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
   const [sections, setSections] = useState<InspectionSection[]>([
     {
       id: 'wind-mitigation',
@@ -154,11 +166,19 @@ Generated on: ${new Date().toLocaleString()}
     // Create PDF document
     const doc = new jsPDF();
     
+    // Add logo if available
+    try {
+      const imgData = logo;
+      doc.addImage(imgData, 'PNG', 15, 10, 30, 15);
+    } catch (error) {
+      console.log('Logo not loaded for PDF');
+    }
+    
     // Add ISN heading at top center
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
     const pageWidth = doc.internal.pageSize.getWidth();
-    doc.text('Inspection Support Network (ISN)', pageWidth / 2, 20, { align: 'center' });
+    doc.text('InspectSnap Report', pageWidth / 2, 20, { align: 'center' });
     
     // Add inspection report title
     doc.setFontSize(16);
@@ -322,7 +342,7 @@ Generated on: ${new Date().toLocaleString()}
     ));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!inspectorName.trim()) {
       toast({
         title: "Missing Information",
@@ -332,20 +352,69 @@ Generated on: ${new Date().toLocaleString()}
       return;
     }
 
-    const completedSections = sections.filter(s => s.status === 'completed').length;
-    const totalSections = sections.length;
+    setSaving(true);
 
-    toast({
-      title: "Inspection Submitted",
-      description: `Inspection form submitted successfully. ${completedSections}/${totalSections} sections completed.`,
-    });
+    try {
+      // Save inspection to database
+      const { data: inspection, error: inspectionError } = await supabase
+        .from('inspections')
+        .insert({
+          user_id: user.id,
+          inspector_name: inspectorName,
+          inspection_date: inspectionDate,
+          template: selectedTemplate
+        })
+        .select()
+        .single();
 
-    console.log('Inspection Data:', {
-      inspectorName,
-      inspectionDate,
-      selectedTemplate,
-      sections
-    });
+      if (inspectionError) throw inspectionError;
+
+      // Save sections and photos
+      for (const section of sections) {
+        const { data: sectionData, error: sectionError } = await supabase
+          .from('inspection_sections')
+          .insert({
+            inspection_id: inspection.id,
+            section_title: section.title,
+            notes: section.notes,
+            status: section.status
+          })
+          .select()
+          .single();
+
+        if (sectionError) throw sectionError;
+
+        // Save photos for this section
+        for (const photo of section.photos) {
+          const { error: photoError } = await supabase
+            .from('inspection_photos')
+            .insert({
+              section_id: sectionData.id,
+              photo_url: photo.url,
+              photo_name: photo.name
+            });
+
+          if (photoError) throw photoError;
+        }
+      }
+
+      const completedSections = sections.filter(s => s.status === 'completed').length;
+      const totalSections = sections.length;
+
+      toast({
+        title: "Inspection Saved",
+        description: `Inspection saved successfully to database. ${completedSections}/${totalSections} sections completed.`,
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Save Failed",
+        description: error.message || "Failed to save inspection to database",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const loadTemplate = (template: string) => {
@@ -468,14 +537,40 @@ Generated on: ${new Date().toLocaleString()}
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
+        {/* Header with Navigation */}
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-3">
-              <FileText className="h-8 w-8 text-blue-600" />
-              4-Point Inspection Form
-            </CardTitle>
-            <p className="text-gray-600 mt-2">Professional Property Inspection Documentation</p>
+          <CardHeader>
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-4">
+                <img src={logo} alt="InspectSnap Logo" className="h-12 w-12" />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">InspectSnap</h1>
+                  <p className="text-sm text-gray-600">Welcome, {user.email}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <UpgradeButton />
+                {isAdmin && (
+                  <Link to="/admin">
+                    <Button variant="outline" size="sm">
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
+                <Button variant="outline" size="sm" onClick={signOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
+            </div>
+            <div className="text-center">
+              <CardTitle className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-3">
+                <FileText className="h-8 w-8 text-blue-600" />
+                4-Point Inspection Form
+              </CardTitle>
+              <p className="text-gray-600 mt-2">Professional Property Inspection Documentation</p>
+            </div>
           </CardHeader>
         </Card>
 
@@ -511,6 +606,33 @@ Generated on: ${new Date().toLocaleString()}
               </div>
             </div>
             
+            {/* Aria Glasses Integration */}
+            <AriaGlassesIntegration 
+              onPhotoCapture={(photoData) => {
+                const photo: Photo = {
+                  id: Date.now().toString() + Math.random().toString(36),
+                  url: photoData,
+                  name: `aria_photo_${Date.now()}.jpg`
+                };
+                
+                setSections(prev => prev.map(section => 
+                  section.id === 'other-areas' // Default to other areas section
+                    ? { 
+                        ...section, 
+                        photos: [...section.photos, photo],
+                        status: section.status === 'pending' ? 'in-progress' : section.status
+                      }
+                    : section
+                ));
+              }}
+              onVoiceCommand={(command) => {
+                if (command === 'save notes') {
+                  handleSubmit();
+                } else if (command === 'capture photo') {
+                  startCamera('other-areas');
+                }
+              }}
+            />
           </CardContent>
         </Card>
 
@@ -661,10 +783,11 @@ Generated on: ${new Date().toLocaleString()}
           <CardContent className="pt-6">
             <Button 
               onClick={handleSubmit}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 text-lg font-semibold shadow-lg"
+              disabled={saving}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 text-lg font-semibold shadow-lg disabled:opacity-50"
             >
               <CheckCircle className="h-5 w-5 mr-2" />
-              Submit Inspection
+              {saving ? 'Saving to Database...' : 'Submit Inspection'}
             </Button>
           </CardContent>
         </Card>
