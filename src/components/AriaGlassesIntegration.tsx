@@ -139,7 +139,7 @@ const AriaGlassesIntegration: React.FC<AriaGlassesIntegrationProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Glasses className="w-5 h-5" />
-          Aria Glasses Integration
+          Connect via Smart Glasses
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
