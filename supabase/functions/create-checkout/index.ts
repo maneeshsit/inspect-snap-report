@@ -42,7 +42,7 @@ serve(async (req) => {
           price_data: {
             currency: "usd",
             product_data: { name: "InspectSnap Pro Subscription" },
-            unit_amount: 2999, // $29.99 per month
+            unit_amount: 1500, // $15.00 per month
             recurring: { interval: "month" },
           },
           quantity: 1,
