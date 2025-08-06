@@ -774,18 +774,6 @@ Generated on: ${new Date().toLocaleString()}
                     className="mt-1 min-h-[120px] resize-none"
                     rows={5}
                   />
-                  {section.id === 'wind-mitigation' && (
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      <p className="font-medium mb-1">Key items to document:</p>
-                      <ul className="space-y-1 ml-4">
-                        <li>• Roof-to-wall connection methods</li>
-                        <li>• Gable end bracing presence and type</li>
-                        <li>• Roof deck attachment (nail pattern, spacing)</li>
-                        <li>• Roof covering materials and installation</li>
-                        <li>• Opening protection systems (shutters, impact-rated)</li>
-                      </ul>
-                    </div>
-                  )}
                 </div>
 
                 {/* Photo Section */}
