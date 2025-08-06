@@ -64,7 +64,34 @@ const InspectionForm = () => {
       title: 'Wind Mitigation',
       icon: <Wind className="h-5 w-5" />,
       description: 'Inspect roof-to-wall connections, roof deck attachment, roof covering, and opening protection',
-      notes: '',
+      notes: `Inspection Date: [Insert Date]
+Inspector: [Insert Name]
+Property Address: [Insert Address]
+Client Name: [Insert Client Name]
+Roof Covering:
+Type: [Shingle / Tile / Metal / Other]
+Age: [Insert Age in Years]
+Condition: [Good / Fair / Poor]
+Attachment: [Nail spacing and pattern observed – e.g., 6d/8d nails, clips, straps, etc.]
+Roof Deck Attachment:
+Type: [Plywood / OSB / Other]
+Fastening: [Staples / Nails]
+Deck thickness: [Insert mm or inches]
+Roof-to-Wall Connections:
+Observed [Clips / Single Wraps / Double Wraps / Toe Nails]
+Secure and properly installed? [Yes/No]
+Roof Geometry:
+[Hip / Gable / Flat / Combination]
+Comments: [Insert observation about vulnerability to wind uplift]
+Secondary Water Resistance (SWR):
+[Peel and stick / Foam adhesive / None observed]
+Presence confirmed in attic or underlayment.
+Opening Protection:
+Windows/Doors: [Impact-rated / Non-rated / Shutters installed]
+Garage door bracing: [Present / Absent / Needs reinforcement]
+General Notes:
+Overall wind mitigation measures appear [Adequate / Inadequate]
+Recommend: [Upgrades for roof-to-wall connectors or shutter installation]`,
       photos: [],
       status: 'pending'
     },
@@ -73,7 +100,24 @@ const InspectionForm = () => {
       title: 'WDO (Termite/Evasive Bugs)',
       icon: <Bug className="h-5 w-5" />,
       description: 'Wood Destroying Organism inspection for termites, carpenter ants, and other pests',
-      notes: '',
+      notes: `Inspection Date: [Insert Date]
+Inspector: [Insert Name]
+Property Address: [Insert Address]
+Client Name: [Insert Client Name]
+Evidence of Termite Activity: [Yes / No]
+Type: [Subterranean / Drywood / Dampwood]
+Visible damage to wood framing or support: [Yes / No]
+Active infestation signs: [Frass / Mud tubes / Wings]
+Other Wood-Damaging Insects:
+Carpenter ants/beetles: [Present / Absent]
+Signs: [Wood shavings / Entry holes]
+Moisture Intrusion Risk Areas:
+Crawl space: [Dry / Damp / Wet]
+Wood-to-soil contact observed: [Yes / No]
+Attic and eaves condition: [Noted any nests, chewed wood, etc.]
+Treatment History:
+[Treated / No record / Requires treatment]
+Recommend further evaluation by pest control if [active damage observed].`,
       photos: [],
       status: 'pending'
     },
@@ -82,7 +126,25 @@ const InspectionForm = () => {
       title: 'Air Quality (Mold)',
       icon: <Droplets className="h-5 w-5" />,
       description: 'Inspect for mold, moisture issues, and indoor air quality concerns',
-      notes: '',
+      notes: `Inspection Date: [Insert Date]
+Inspector: [Insert Name]
+Property Address: [Insert Address]
+Client Name: [Insert Client Name]
+Humidity Levels:
+Indoor average: [Insert %RH]
+Signs of excess humidity: [Condensation / Musty odors / Visible mold growth]
+Mold Presence:
+Visible mold/mildew: [Yes / No]
+Locations: [Bathroom ceiling / HVAC ducts / Crawlspace / Walls / Behind drywall (suspected)]
+Testing performed: [Air sampling / Surface swab / None]
+Ventilation:
+Adequate ventilation in attic, crawl spaces, and bathrooms: [Yes / No]
+Dehumidifiers or exhaust fans present and functional? [Yes / No]
+Moisture Readings:
+Wall/Ceiling/Carpet areas: [Insert % moisture content where elevated]
+Signs of water intrusion or leakage: [Yes – Location noted / No]
+Recommendation:
+[Professional mold remediation / HVAC duct cleaning / Install dehumidifier]`,
       photos: [],
       status: 'pending'
     },
@@ -91,7 +153,40 @@ const InspectionForm = () => {
       title: 'Other Key Areas',
       icon: <Home className="h-5 w-5" />,
       description: 'HVAC, Plumbing, Electrical systems and other critical infrastructure',
-      notes: '',
+      notes: `Inspection Date: [Insert Date]
+Inspector: [Insert Name]
+Property Address: [Insert Address]
+Client Name: [Insert Client Name]
+a. HVAC System
+System Type: [Split / Central / Mini-split / Other]
+Age & Make: [Insert year and brand]
+Cooling/Heating Functionality: [Tested and operational / Issues observed]
+Air Filters & Ducts: [Clean / Dirty / Needs replacement]
+Thermostat Operation: [Responsive / Malfunctioning]
+Condensation Drain Line: [Clear / Clogged]
+
+b. Plumbing System
+Main Water Supply: [City / Well]
+Shut-off Valve Location: [Accessible / Not located]
+Leaks Observed: [Yes – Location noted / No]
+Water Pressure: [Normal / Low / High]
+Hot Water System:
+Type: [Tank / Tankless]
+Age: [Insert years]
+
+Working condition: [Yes / No]
+Signs of corrosion, mold, or mineral buildup around fixtures? [Yes / No]
+
+c. Electrical System
+Service Panel Condition:
+Amperage: [100A / 150A / 200A / Other]
+Breakers labeled and functional: [Yes / No]
+No double taps or overheating: [Yes / Issues observed]
+
+Outlets & Fixtures:
+GFCI outlets in wet areas: [Present / Missing]
+Exposed wiring or unsafe installations: [Yes / No]
+Smoke & CO detectors present and working: [Yes / No]`,
       photos: [],
       status: 'pending'
     }
