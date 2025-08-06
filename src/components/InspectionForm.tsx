@@ -660,13 +660,37 @@ Generated on: ${new Date().toLocaleString()}
               <CardContent className="space-y-4">
                 {/* Notes Section */}
                 <div>
-                  <Label className="text-sm font-medium">Inspection Notes</Label>
+                  <Label className="text-sm font-medium">
+                    Inspection Notes
+                    {section.id === 'wind-mitigation' && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        Document roof-to-wall connections, gable end bracing, roof deck attachment, etc.
+                      </span>
+                    )}
+                  </Label>
                   <Textarea
                     value={section.notes}
                     onChange={(e) => updateNotes(section.id, e.target.value)}
-                    placeholder={`Enter ${section.title.toLowerCase()} inspection notes...`}
-                    className="mt-1 min-h-[100px]"
+                    placeholder={
+                      section.id === 'wind-mitigation' 
+                        ? "Document wind mitigation features: roof-to-wall connections, gable end bracing, roof deck attachment, roof covering, opening protection systems..."
+                        : `Enter ${section.title.toLowerCase()} inspection notes...`
+                    }
+                    className="mt-1 min-h-[120px] resize-none"
+                    rows={5}
                   />
+                  {section.id === 'wind-mitigation' && (
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      <p className="font-medium mb-1">Key items to document:</p>
+                      <ul className="space-y-1 ml-4">
+                        <li>• Roof-to-wall connection methods</li>
+                        <li>• Gable end bracing presence and type</li>
+                        <li>• Roof deck attachment (nail pattern, spacing)</li>
+                        <li>• Roof covering materials and installation</li>
+                        <li>• Opening protection systems (shutters, impact-rated)</li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
 
                 {/* Photo Section */}
