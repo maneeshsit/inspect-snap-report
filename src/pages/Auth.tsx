@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
@@ -21,18 +22,25 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
+    console.log('Starting Google OAuth flow...');
+    console.log('Current URL:', window.location.href);
+    console.log('Redirect URL will be:', `${window.location.origin}/`);
+    
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/`
         }
       });
+      
+      console.log('Google OAuth response:', { data, error });
+      
       if (error) {
         console.error('Google sign in error:', error);
       }
     } catch (error) {
-      console.error('Google sign in error:', error);
+      console.error('Google sign in catch error:', error);
     }
     setLoading(false);
   };

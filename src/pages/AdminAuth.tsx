@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
@@ -27,18 +28,25 @@ const AdminAuth = () => {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
+    console.log('Admin: Starting Google OAuth flow...');
+    console.log('Admin: Current URL:', window.location.href);
+    console.log('Admin: Redirect URL will be:', `${window.location.origin}/admin`);
+    
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/admin`
         }
       });
+      
+      console.log('Admin: Google OAuth response:', { data, error });
+      
       if (error) {
-        console.error('Google sign in error:', error);
+        console.error('Admin: Google sign in error:', error);
       }
     } catch (error) {
-      console.error('Google sign in error:', error);
+      console.error('Admin: Google sign in catch error:', error);
     }
     setLoading(false);
   };
