@@ -30,13 +30,21 @@ const AdminAuth = () => {
     setLoading(true);
     console.log('Admin: Starting Google OAuth flow...');
     console.log('Admin: Current URL:', window.location.href);
-    console.log('Admin: Redirect URL will be:', `${window.location.origin}/admin`);
+    console.log('Admin: Window origin:', window.location.origin);
     
     try {
+      // Use the current URL as redirect instead of constructing it
+      const redirectUrl = `${window.location.origin}/admin`;
+      console.log('Admin: Using redirect URL:', redirectUrl);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/admin`
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
       
@@ -44,9 +52,13 @@ const AdminAuth = () => {
       
       if (error) {
         console.error('Admin: Google sign in error:', error);
+        alert(`Admin Google Sign In Error: ${error.message}`);
+      } else {
+        console.log('Admin: OAuth initiated successfully');
       }
     } catch (error) {
       console.error('Admin: Google sign in catch error:', error);
+      alert(`Admin unexpected error: ${error}`);
     }
     setLoading(false);
   };
@@ -99,7 +111,7 @@ const AdminAuth = () => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Log in with Google
+              {loading ? 'Connecting to Google...' : 'Log in with Google'}
             </Button>
 
             {/* Divider */}
