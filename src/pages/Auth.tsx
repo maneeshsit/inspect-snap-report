@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
+import AppDownloadFloat from '@/components/AppDownloadFloat';
 
 const Auth = () => {
   const { user, signIn } = useAuth();
@@ -70,6 +71,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/20 p-4">
+      <AppDownloadFloat />
       <Card className="w-full max-w-md">
         <CardContent className="pt-6">
           <div className="space-y-6">

@@ -20,7 +20,7 @@ const AppDownloadFloat = () => {
         </Button>
         
         <div className="space-y-4">
-          <h3 className="text-primary font-bold text-lg tracking-tight">
+          <h3 className="text-primary font-bold text-base tracking-tight">
             DOWNLOAD THE APP
           </h3>
           
