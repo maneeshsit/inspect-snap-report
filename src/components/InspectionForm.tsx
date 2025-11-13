@@ -50,6 +50,7 @@ const InspectionForm = () => {
   const [inspectorName, setInspectorName] = useState('');
   const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [propertyAddress, setPropertyAddress] = useState('');
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [currentSectionId, setCurrentSectionId] = useState<string>('');
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -457,6 +458,7 @@ Generated on: ${new Date().toLocaleString()}
           user_id: user.id,
           inspector_name: inspectorName,
           inspection_date: inspectionDate,
+          property_address: propertyAddress,
           template: selectedTemplate
         })
         .select()
@@ -500,6 +502,75 @@ Generated on: ${new Date().toLocaleString()}
         title: "Inspection Saved",
         description: `Inspection saved successfully to database. ${completedSections}/${totalSections} sections completed.`,
       });
+
+      // Generate and send report via email
+      try {
+        const reportSections = sections.map(section => {
+          return `
+==========================================
+${section.title.toUpperCase()}
+==========================================
+
+DESCRIPTION:
+${section.description}
+
+STATUS: ${section.status.toUpperCase()}
+
+NOTES:
+${section.notes || 'No notes provided'}
+
+PHOTOS: ${section.photos.length} photo(s) attached
+${section.photos.map((photo, index) => `- Photo ${index + 1}: ${photo.name}`).join('\n')}
+`;
+        }).join('\n');
+
+        const reportContent = `
+INSPECTSNAP INSPECTION REPORT
+
+Inspector: ${inspectorName}
+Date: ${inspectionDate}
+Property Address: ${propertyAddress || 'N/A'}
+Template: ${selectedTemplate || 'Custom'}
+
+Total Sections: ${totalSections}
+Completed Sections: ${completedSections}
+
+${reportSections}
+
+Generated on: ${new Date().toLocaleString()}
+        `.trim();
+
+        // Call edge function to send email
+        const { error: emailError } = await supabase.functions.invoke('send-report-email', {
+          body: {
+            inspectorName,
+            inspectionDate,
+            propertyAddress: propertyAddress || 'N/A',
+            reportContent
+          }
+        });
+
+        if (emailError) {
+          console.error('Email sending failed:', emailError);
+          toast({
+            title: "Email Warning",
+            description: "Inspection saved but email sending failed. Please try again later.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Email Sent Successfully",
+            description: "Inspection report has been sent to inspectorsnapreport@gmail.com",
+          });
+        }
+      } catch (emailError: any) {
+        console.error('Email error:', emailError);
+        toast({
+          title: "Email Warning",
+          description: "Inspection saved but email sending encountered an issue.",
+          variant: "destructive"
+        });
+      }
 
     } catch (error: any) {
       toast({
@@ -699,6 +770,17 @@ Generated on: ${new Date().toLocaleString()}
                   className="mt-1"
                 />
               </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="property-address" className="text-sm font-medium">Property Address</Label>
+              <Input
+                id="property-address"
+                value={propertyAddress}
+                onChange={(e) => setPropertyAddress(e.target.value)}
+                placeholder="Enter property address"
+                className="mt-1"
+              />
             </div>
             
             {/* Aria Glasses Integration */}
