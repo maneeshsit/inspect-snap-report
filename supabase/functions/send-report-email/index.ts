@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,23 +25,36 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending report email to inspectorsnapreport@gmail.com");
 
-    const emailResponse = await resend.emails.send({
-      from: "Inspection Reports <onboarding@resend.dev>",
-      to: ["inspectorsnapreport@gmail.com"],
-      subject: `Inspection Report - ${propertyAddress || 'N/A'} - ${inspectionDate}`,
-      html: `
-        <h1>Inspection Report</h1>
-        <p><strong>Inspector:</strong> ${inspectorName}</p>
-        <p><strong>Date:</strong> ${inspectionDate}</p>
-        <p><strong>Property Address:</strong> ${propertyAddress || 'N/A'}</p>
-        <hr />
-        <pre style="white-space: pre-wrap; font-family: monospace;">${reportContent}</pre>
-      `,
+    const emailResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "Inspection Reports <onboarding@resend.dev>",
+        to: ["inspectorsnapreport@gmail.com"],
+        subject: `Inspection Report - ${propertyAddress || 'N/A'} - ${inspectionDate}`,
+        html: `
+          <h1>Inspection Report</h1>
+          <p><strong>Inspector:</strong> ${inspectorName}</p>
+          <p><strong>Date:</strong> ${inspectionDate}</p>
+          <p><strong>Property Address:</strong> ${propertyAddress || 'N/A'}</p>
+          <hr />
+          <pre style="white-space: pre-wrap; font-family: monospace;">${reportContent}</pre>
+        `,
+      }),
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    const emailData = await emailResponse.json();
 
-    return new Response(JSON.stringify({ success: true, data: emailResponse }), {
+    console.log("Email sent successfully:", emailData);
+
+    if (!emailResponse.ok) {
+      throw new Error(emailData.message || "Failed to send email");
+    }
+
+    return new Response(JSON.stringify({ success: true, data: emailData }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
